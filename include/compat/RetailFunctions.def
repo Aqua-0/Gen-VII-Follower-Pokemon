@@ -1,0 +1,317 @@
+// id, provider, linker symbol, export name or mapped routine label
+RETAIL_FUNCTION(AppG2DUtilGetMsgWin, STATIC,
+  _ZN3app4util7G2DUtil9GetMsgWinEv,
+  "_ZN3app4util7G2DUtil9GetMsgWinEv")
+RETAIL_FUNCTION(CtrGlClearRenderTargetDepthStencil, STATIC,
+  _ZN4gfl23gfx3ctr5CTRGL30ClearRenderTargetDepthStencil_EjRKNS0_5ColorEfh,
+  "_ZN4gfl23gfx3ctr5CTRGL30ClearRenderTargetDepthStencil_EjRKNS0_5ColorEfh")
+RETAIL_FUNCTION(CtrGlSetViewport, STATIC,
+  _ZN4gfl23gfx3ctr5CTRGL12SetViewport_Ejjjj,
+  "_ZN4gfl23gfx3ctr5CTRGL12SetViewport_Ejjjj")
+RETAIL_FUNCTION(CtrGlSetScissor, STATIC,
+  _ZN4gfl23gfx3ctr5CTRGL11SetScissor_Ejjjj,
+  "_ZN4gfl23gfx3ctr5CTRGL11SetScissor_Ejjjj")
+RETAIL_FUNCTION(FadeManagerGetInstance, STATIC,
+  _ZN4gfl24base17SingletonAccessorINS_4Fade11FadeManagerEE11GetInstanceEv,
+  "_ZN4gfl24base17SingletonAccessorINS_4Fade11FadeManagerEE11GetInstanceEv")
+RETAIL_FUNCTION(HeapCreate, STATIC,
+  _ZN4gfl24heap7Manager10CreateHeapEPNS0_11CtrHeapBaseEiiNS0_8HeapTypeEbPKc,
+  "_ZN4gfl24heap7Manager10CreateHeapEPNS0_11CtrHeapBaseEiiNS0_8HeapTypeEbPKc")
+RETAIL_FUNCTION(HeapDelete, STATIC,
+  _ZN4gfl24heap7Manager10DeleteHeapEPNS0_11CtrHeapBaseE,
+  "_ZN4gfl24heap7Manager10DeleteHeapEPNS0_11CtrHeapBaseE")
+RETAIL_FUNCTION(HeapGetById, STATIC,
+  _ZN4gfl24heap7Manager15GetHeapByHeapIdEi,
+  "_ZN4gfl24heap7Manager15GetHeapByHeapIdEi")
+RETAIL_FUNCTION(HeapFreeMemoryBlock, STATIC,
+  _ZN4gfl24heap22GflHeapFreeMemoryBlockEPv,
+  "_ZN4gfl24heap22GflHeapFreeMemoryBlockEPv")
+RETAIL_FUNCTION(RoManagerGetInstance, STATIC,
+  _ZN4gfl24base17SingletonAccessorINS_2ro9RoManagerEE11GetInstanceEv,
+  "_ZN4gfl24base17SingletonAccessorINS_2ro9RoManagerEE11GetInstanceEv")
+RETAIL_FUNCTION(RoManagerLoadModule, STATIC,
+  _ZN4gfl22ro9RoManager10LoadModuleEPNS_2fs16AsyncFileManagerEPKcPNS_4heap11CtrHeapBaseENS0_8FixLevelE,
+  "_ZN4gfl22ro9RoManager10LoadModuleEPNS_2fs16AsyncFileManagerEPKcPNS_4heap11CtrHeapBaseENS0_8FixLevelE")
+RETAIL_FUNCTION(RoManagerStartModule, STATIC,
+  _ZN4gfl22ro9RoManager11StartModuleEPN2nn2ro6ModuleEb,
+  "_ZN4gfl22ro9RoManager11StartModuleEPN2nn2ro6ModuleEb")
+RETAIL_FUNCTION(RoManagerDisposeModule, STATIC,
+  _ZN4gfl22ro9RoManager13DisposeModuleEPN2nn2ro6ModuleE,
+  "_ZN4gfl22ro9RoManager13DisposeModuleEPN2nn2ro6ModuleE")
+RETAIL_FUNCTION(AsyncFileManagerAddArcFileLoadDataReq, STATIC,
+  _ZN4gfl22fs16AsyncFileManager21AddArcFileLoadDataReqERKNS1_18ArcFileLoadDataReqE,
+  "_ZN4gfl22fs16AsyncFileManager21AddArcFileLoadDataReqERKNS1_18ArcFileLoadDataReqE")
+RETAIL_FUNCTION(AsyncFileManagerIsArcFileLoadDataFinished, STATIC,
+  _ZNK4gfl22fs16AsyncFileManager25IsArcFileLoadDataFinishedEPPv,
+  "_ZNK4gfl22fs16AsyncFileManager25IsArcFileLoadDataFinishedEPPv")
+RETAIL_FUNCTION(AsyncFileManagerGetArcFile, STATIC,
+  _ZNK4gfl22fs16AsyncFileManager10GetArcFileEj,
+  "_ZNK4gfl22fs16AsyncFileManager10GetArcFileEj")
+RETAIL_FUNCTION(ArcFileGetDataSize, STATIC,
+  _ZNK4gfl22fs7ArcFile11GetDataSizeEPjjPNS_4heap11CtrHeapBaseE,
+  "_ZNK4gfl22fs7ArcFile11GetDataSizeEPjjPNS_4heap11CtrHeapBaseE")
+RETAIL_FUNCTION(AnimationPackListInitialize, STATIC,
+  _ZN4gfl29animation17AnimationPackList10InitializeEPNS_4heap11CtrHeapBaseEj,
+  "_ZN4gfl29animation17AnimationPackList10InitializeEPNS_4heap11CtrHeapBaseEj")
+RETAIL_FUNCTION(AnimationPackListLoadData, STATIC,
+  _ZN4gfl29animation17AnimationPackList8LoadDataEjPNS_3gfx12IGLAllocatorEPNS_4heap11CtrHeapBaseEPc,
+  "_ZN4gfl29animation17AnimationPackList8LoadDataEjPNS_3gfx12IGLAllocatorEPNS_4heap11CtrHeapBaseEPc")
+RETAIL_FUNCTION(AnimationPackListGetResourceNode, STATIC,
+  _ZN4gfl29animation17AnimationPackList15GetResourceNodeEjj,
+  "_ZN4gfl29animation17AnimationPackList15GetResourceNodeEjj")
+RETAIL_FUNCTION(AnimationPackListFinalize, STATIC,
+  _ZN4gfl29animation17AnimationPackList8FinalizeEv,
+  "_ZN4gfl29animation17AnimationPackList8FinalizeEv")
+RETAIL_FUNCTION(RideIsSurfing, STATIC,
+  _ZN5Field20EventPokemonRideTool10IsNaminoriENS_15RIDE_POKEMON_IDE,
+  "_ZN5Field20EventPokemonRideTool10IsNaminoriENS_15RIDE_POKEMON_IDE")
+RETAIL_FUNCTION(RideGetPokemonId, STATIC,
+  _ZN5Field20EventPokemonRideTool18GetPokemonRideOnIDEPN7GameSys11GameManagerE,
+  "_ZN5Field20EventPokemonRideTool18GetPokemonRideOnIDEPN7GameSys11GameManagerE")
+RETAIL_FUNCTION(SoundPlaySE, STATIC,
+  _ZN5Sound6PlaySEEjjij,
+  "_ZN5Sound6PlaySEEjjij")
+RETAIL_FUNCTION(SoundChangeSEVolume, STATIC,
+  _ZN5Sound14ChangeSEVolumeEjfji,
+  "_ZN5Sound14ChangeSEVolumeEjfji")
+// Sun/Moon doesn't take the final userId argument used by Ultra.
+// The shared veneer uses the Ultra signature. Sun/Moon safely
+// ignores the extra stack argument under AAPCS.
+RETAIL_FUNCTION_FAMILY(SoundPlayVoice, STATIC,
+  _ZN5Sound9PlayVoiceEh6MonsNohNS_9VoiceTypeEij,
+  "_ZN5Sound9PlayVoiceEh6MonsNohNS_9VoiceTypeEi",
+  "_ZN5Sound9PlayVoiceEh6MonsNohNS_9VoiceTypeEij")
+RETAIL_FUNCTION(DrawManagerViewSpaceRenderEnable, STATIC,
+  _ZN4gfl215renderingengine8renderer11DrawManager21ViewSpaceRenderEnableEi,
+  "_ZN4gfl215renderingengine8renderer11DrawManager21ViewSpaceRenderEnableEi")
+RETAIL_FUNCTION(DrawEnvGetLightSet, STATIC,
+  FollowerRetail_DrawEnvGetLightSet,
+  "_ZN4gfl215renderingengine10scenegraph8instance11DrawEnvNode11GetLightSetEi")
+RETAIL_FUNCTION(FieldMoveModelShadowUpdate, STATIC,
+  FollowerRetail_FieldMoveModelShadowUpdate,
+  "_ZN5Field9MoveModel27FieldMoveModelShadowManager12UpdateShadowEv")
+RETAIL_FUNCTION(MotionBlurRenderStart, STATIC,
+  _ZN6System10MotionBlur11RenderStartENS0_9BlendTypeENS0_9AnimeTypeEPKN4gfl23gfx7SurfaceEb,
+  "_ZN6System10MotionBlur11RenderStartENS0_9BlendTypeENS0_9AnimeTypeEPKN4gfl23gfx7SurfaceEb")
+RETAIL_FUNCTION(MotionBlurRenderOff, STATIC,
+  _ZN6System10MotionBlur9RenderOffEv,
+  "_ZN6System10MotionBlur9RenderOffEv")
+RETAIL_FUNCTION(GameEventCtor, STATIC,
+  _ZN7GameSys9GameEventC2EPN4gfl24heap11CtrHeapBaseE,
+  "_ZN7GameSys9GameEventC2EPN4gfl24heap11CtrHeapBaseE")
+RETAIL_FUNCTION(GameEventDtor, STATIC,
+  _ZN7GameSys9GameEventD2Ev,
+  "_ZN7GameSys9GameEventD2Ev")
+RETAIL_FUNCTION(FieldSetUpFieldSituation, STATIC,
+  _ZN5Field19SetUpFieldSituationEP19BTL_FIELD_SITUATIONPN7GameSys11GameManagerEPPKNS_14ZoneDataLoaderEjN3btl2bg16bgsys_far_typeIDENSA_17bgsys_near_typeIDEa,
+  "_ZN5Field19SetUpFieldSituationEP19BTL_FIELD_SITUATIONPN7GameSys11GameManagerEPPKNS_14ZoneDataLoaderEjN3btl2bg16bgsys_far_typeIDENSA_17bgsys_near_typeIDEa")
+RETAIL_FUNCTION(EventBattleCallCallWild, STATIC,
+  _ZN5Field15EventBattleCall8CallWildEPN7GameSys16GameEventManagerEPNS1_11GameManagerERNS_7Encount7PokeSetEjPKN3pml9PokePartyE,
+  "_ZN5Field15EventBattleCall8CallWildEPN7GameSys16GameEventManagerEPNS1_11GameManagerERNS_7Encount7PokeSetEjPKN3pml9PokePartyE")
+RETAIL_FUNCTION(EventBattleCallCallWildEx, STATIC,
+  _ZN5Field15EventBattleCall10CallWildExEPN7GameSys16GameEventManagerEPNS1_11GameManagerERNS_7Encount7PokeSetEjjPKN3pml9PokePartyE,
+  "_ZN5Field15EventBattleCall10CallWildExEPN7GameSys16GameEventManagerEPNS1_11GameManagerERNS_7Encount7PokeSetEjjPKN3pml9PokePartyE")
+RETAIL_FUNCTION(PokemonParamCtorInitialSpec, STATIC,
+  _ZN3pml8pokepara12PokemonParamC1EPN4gfl24heap11CtrHeapBaseERKNS0_11InitialSpecE,
+  "_ZN3pml8pokepara12PokemonParamC1EPN4gfl24heap11CtrHeapBaseERKNS0_11InitialSpecE")
+RETAIL_FUNCTION(PokeSetSetupLotteryIntruder, STATIC,
+  _ZN5Field7Encount7PokeSet29SetupLotteryIntruderPokeParamEPN3pml8pokepara12PokemonParamEPN4gfl24math10SFMTRandomENS0_12IntruderTypeEh,
+  "_ZN5Field7Encount7PokeSet29SetupLotteryIntruderPokeParamEPN3pml8pokepara12PokemonParamEPN4gfl24math10SFMTRandomENS0_12IntruderTypeEh")
+RETAIL_FUNCTION(PokemonModelGetWalkSpeed, STATIC,
+  _ZN7poke_3d5model12PokemonModel12GetWalkSpeedEf,
+  "_ZN7poke_3d5model12PokemonModel12GetWalkSpeedEf")
+RETAIL_FUNCTION(BaseCameraSetFar, STATIC,
+  _ZN7poke_3d5model10BaseCamera6SetFarEf,
+  "_ZN7poke_3d5model10BaseCamera6SetFarEf")
+RETAIL_FUNCTION(BaseCameraGetFar, STATIC,
+  _ZNK7poke_3d5model10BaseCamera6GetFarEb,
+  "_ZNK7poke_3d5model10BaseCamera6GetFarEb")
+RETAIL_FUNCTION(BaseCameraGetPosition, STATIC,
+  _ZNK7poke_3d5model10BaseCamera11GetPositionEb,
+  "_ZNK7poke_3d5model10BaseCamera11GetPositionEb")
+RETAIL_FUNCTION(BaseCameraGetTargetPosition, STATIC,
+  _ZNK7poke_3d5model10BaseCamera17GetTargetPositionEv,
+  "_ZNK7poke_3d5model10BaseCamera17GetTargetPositionEv")
+RETAIL_FUNCTION(BaseCameraSetupCameraLookAt, STATIC,
+  _ZN7poke_3d5model10BaseCamera17SetupCameraLookAtERKN4gfl24math7Vector3ES6_S6_,
+  "_ZN7poke_3d5model10BaseCamera17SetupCameraLookAtERKN4gfl24math7Vector3ES6_S6_")
+RETAIL_FUNCTION(SkyboxIsEnable, STATIC,
+  _ZNK6System6Skybox6Skybox8IsEnableEv,
+  "_ZNK6System6Skybox6Skybox8IsEnableEv")
+RETAIL_FUNCTION(BaseModelSetPosition, STATIC,
+  _ZN7poke_3d5model9BaseModel11SetPositionERKN4gfl24math7Vector3E,
+  "_ZN7poke_3d5model9BaseModel11SetPositionERKN4gfl24math7Vector3E")
+RETAIL_FUNCTION(BaseModelSetRotation, STATIC,
+  _ZN7poke_3d5model9BaseModel11SetRotationEfffN4gfl24math13EulerRotation13RotationOrderE,
+  "_ZN7poke_3d5model9BaseModel11SetRotationEfffN4gfl24math13EulerRotation13RotationOrderE")
+RETAIL_FUNCTION(GetSimpleParam, STATIC,
+  _ZN8PokeTool14GetSimpleParamEPNS_11SimpleParamEPKN3pml8pokepara9CoreParamE,
+  "_ZN8PokeTool14GetSimpleParamEPNS_11SimpleParamEPKN3pml8pokepara9CoreParamE")
+RETAIL_FUNCTION(CompareSimpleParam, STATIC,
+  _ZN8PokeTool18CompareSimpleParamERKNS_11SimpleParamES2_,
+  "_ZN8PokeTool18CompareSimpleParamERKNS_11SimpleParamES2_")
+RETAIL_FUNCTION(PokeModelChangeAnimation, STATIC,
+  _ZN8PokeTool9PokeModel15ChangeAnimationENS_11MODEL_ANIMEEb,
+  "_ZN8PokeTool9PokeModel15ChangeAnimationENS_11MODEL_ANIMEEb")
+RETAIL_FUNCTION(PokeModelChangeAnimationResource, STATIC,
+  _ZN8PokeTool9PokeModel23ChangeAnimationResourceEPN4gfl215renderingengine10scenegraph8resource12ResourceNodeEi,
+  "_ZN8PokeTool9PokeModel23ChangeAnimationResourceEPN4gfl215renderingengine10scenegraph8resource12ResourceNodeEi")
+RETAIL_FUNCTION(PokeModelSetAnimationLoop, STATIC,
+  _ZN8PokeTool9PokeModel18SetAnimationIsLoopEb,
+  "_ZN8PokeTool9PokeModel18SetAnimationIsLoopEb")
+RETAIL_FUNCTION(PokeModelChangeAnimationSmooth, STATIC,
+  _ZN8PokeTool9PokeModel21ChangeAnimationSmoothENS_11MODEL_ANIMEEib,
+  "_ZN8PokeTool9PokeModel21ChangeAnimationSmoothENS_11MODEL_ANIMEEib")
+RETAIL_FUNCTION(PokeModelIsAnimationAvailable, STATIC,
+  _ZN8PokeTool9PokeModel26IsAvailableAnimationDirectEi,
+  "_ZN8PokeTool9PokeModel26IsAvailableAnimationDirectEi")
+RETAIL_FUNCTION(PokeModelCanDelete, STATIC,
+  _ZN8PokeTool9PokeModel9CanDeleteEv,
+  "_ZN8PokeTool9PokeModel9CanDeleteEv")
+RETAIL_FUNCTION(PokeModelSystemGetDataIdx, STATIC,
+  _ZN8PokeTool15PokeModelSystem10GetDataIdxEiii,
+  "_ZN8PokeTool15PokeModelSystem10GetDataIdxEiii")
+RETAIL_FUNCTION(UiViewGetG2DUtil, STATIC,
+  _ZNK3app2ui6UIView10GetG2DUtilEv,
+  "_ZNK3app2ui6UIView10GetG2DUtilEv")
+RETAIL_FUNCTION(CoreParamIsEgg, STATIC,
+  _ZNK3pml8pokepara9CoreParam5IsEggENS0_12EggCheckTypeE,
+  "_ZNK3pml8pokepara9CoreParam5IsEggENS0_12EggCheckTypeE")
+RETAIL_FUNCTION(CoreParamIsNull, STATIC,
+  _ZNK3pml8pokepara9CoreParam6IsNullEv,
+  "_ZNK3pml8pokepara9CoreParam6IsNullEv")
+RETAIL_FUNCTION(PokePartyGetMemberCount, STATIC,
+  _ZNK3pml9PokeParty14GetMemberCountEv,
+  "_ZNK3pml9PokeParty14GetMemberCountEv")
+RETAIL_FUNCTION(PokePartyGetMember, STATIC,
+  _ZNK3pml9PokeParty21GetMemberPointerConstEj,
+  "_ZNK3pml9PokeParty21GetMemberPointerConstEj")
+RETAIL_FUNCTION(ModelInstanceGetReferenceCount, STATIC,
+  _ZNK4gfl215renderingengine10scenegraph8instance17ModelInstanceNode15GetReferenceCntEv,
+  "_ZNK4gfl215renderingengine10scenegraph8instance17ModelInstanceNode15GetReferenceCntEv")
+RETAIL_FUNCTION(DrawableNodeSetVisible, STATIC,
+  _ZN4gfl215renderingengine10scenegraph8instance12DrawableNode10SetVisibleEi,
+  "_ZN4gfl215renderingengine10scenegraph8instance12DrawableNode10SetVisibleEi")
+RETAIL_FUNCTION(SceneGraphTraverseModelFast, STATIC,
+  _ZN4gfl215renderingengine10scenegraph17SceneGraphManager17TraverseModelFastEPNS1_7DagNodeE,
+  "_ZN4gfl215renderingengine10scenegraph17SceneGraphManager17TraverseModelFastEPNS1_7DagNodeE")
+RETAIL_FUNCTION(DeviceManagerGetButton, STATIC,
+  _ZNK4gfl22ui13DeviceManager9GetButtonEh,
+  "_ZNK4gfl22ui13DeviceManager9GetButtonEh")
+RETAIL_FUNCTION(DeviceManagerGetStick, STATIC,
+  _ZNK4gfl22ui13DeviceManager8GetStickEh,
+  "_ZNK4gfl22ui13DeviceManager8GetStickEh")
+RETAIL_FUNCTION(DeviceSetDeviceRunningEnable, STATIC,
+  _ZN4gfl22ui6Device22SetDeviceRunningEnableEb,
+  "_ZN4gfl22ui6Device22SetDeviceRunningEnableEb")
+RETAIL_FUNCTION(ButtonIsTrigger, STATIC,
+  _ZNK4gfl22ui6Button9IsTriggerEjNS1_12InputStateIDE,
+  "_ZNK4gfl22ui6Button9IsTriggerEjNS1_12InputStateIDE")
+RETAIL_FUNCTION(ButtonIsHold, STATIC,
+  _ZNK4gfl22ui6Button6IsHoldEjNS1_12InputStateIDE,
+  "_ZNK4gfl22ui6Button6IsHoldEjNS1_12InputStateIDE")
+RETAIL_FUNCTION(GameManagerGetUiDeviceManager, STATIC,
+  _ZNK7GameSys11GameManager18GetUiDeviceManagerEv,
+  "_ZNK7GameSys11GameManager18GetUiDeviceManagerEv")
+RETAIL_FUNCTION(GameManagerGetAsyncFileManager, STATIC,
+  _ZNK7GameSys11GameManager19GetAsyncFileManagerEv,
+  "_ZNK7GameSys11GameManager19GetAsyncFileManagerEv")
+RETAIL_FUNCTION(GameEventManagerIsExists, STATIC,
+  _ZNK7GameSys16GameEventManager8IsExistsEv,
+  "_ZNK7GameSys16GameEventManager8IsExistsEv")
+RETAIL_FUNCTION(BaseModelGetAnimationFrame, STATIC,
+  _ZNK7poke_3d5model9BaseModel17GetAnimationFrameEjNS1_12AnimationBitE,
+  "_ZNK7poke_3d5model9BaseModel17GetAnimationFrameEjNS1_12AnimationBitE")
+RETAIL_FUNCTION(BaseModelGetAnimationEndFrame, STATIC,
+  _ZNK7poke_3d5model9BaseModel20GetAnimationEndFrameEjNS1_12AnimationBitE,
+  "_ZNK7poke_3d5model9BaseModel20GetAnimationEndFrameEjNS1_12AnimationBitE")
+RETAIL_FUNCTION(OperatorDelete, STATIC,
+  FollowerCarrier_RetailDelete,
+  "_ZdlPv")
+RETAIL_FUNCTION(OperatorNewHeap, STATIC,
+  _ZnwjPN4gfl24heap11CtrHeapBaseE,
+  "_ZnwjPN4gfl24heap11CtrHeapBaseE")
+RETAIL_FUNCTION(FieldMoveModelManagerInitializeWork, STATIC,
+  _ZN5Field9MoveModel21FieldMoveModelManager23InitializeMoveModelWorkENS0_19FIELD_MOVE_MODEL_IDEPKNS0_24FieldMoveModelHeaderWorkE,
+  "_ZN5Field9MoveModel21FieldMoveModelManager23InitializeMoveModelWorkENS0_19FIELD_MOVE_MODEL_IDEPKNS0_24FieldMoveModelHeaderWorkE")
+RETAIL_FUNCTION(FieldMoveModelManagerInitializeResource, STATIC,
+  _ZN5Field9MoveModel21FieldMoveModelManager27InitializeMoveModelResourceENS0_19FIELD_MOVE_MODEL_IDEPKNS0_28FieldMoveModelHeaderResourceEPN7poke_3d5model27DressUpModelResourceManagerE,
+  "_ZN5Field9MoveModel21FieldMoveModelManager27InitializeMoveModelResourceENS0_19FIELD_MOVE_MODEL_IDEPKNS0_28FieldMoveModelHeaderResourceEPN7poke_3d5model27DressUpModelResourceManagerE")
+RETAIL_FUNCTION(FieldMoveModelManagerTerminate, STATIC,
+  _ZN5Field9MoveModel21FieldMoveModelManager30TerminateMoveModelWorkResourceENS0_19FIELD_MOVE_MODEL_IDE,
+  "_ZN5Field9MoveModel21FieldMoveModelManager30TerminateMoveModelWorkResourceENS0_19FIELD_MOVE_MODEL_IDE")
+RETAIL_FUNCTION(FieldMoveModelManagerGetFreeIndex, STATIC,
+  _ZN5Field9MoveModel21FieldMoveModelManager35GetFieldMoveModelIndexFromFreeSpaceEv,
+  "_ZN5Field9MoveModel21FieldMoveModelManager35GetFieldMoveModelIndexFromFreeSpaceEv")
+
+RETAIL_FUNCTION(CollisionFindNearestMeshHit, FIELDRO,
+  FollowerNative_CollisionFindNearestMeshHit, "CollisionFindNearestMeshHit")
+RETAIL_FUNCTION(TerrainStoreDetailRequest, FIELDRO,
+  FollowerNative_TerrainStoreDetailRequest, "TerrainStoreDetailRequest")
+RETAIL_FUNCTION(CollisionTestCategory1Segment, FIELDRO,
+  FollowerNative_CollisionTestCategory1Segment, "CollisionTestCategory1Segment")
+RETAIL_FUNCTION(CollisionTestCategory3Segment, FIELDRO,
+  FollowerNative_CollisionTestCategory3Segment, "CollisionTestCategory3Segment")
+RETAIL_FUNCTION(FieldModelForwardVisibility, FIELDRO,
+  FollowerNative_FieldModelForwardVisibility, "FieldModelForwardVisibility")
+RETAIL_FUNCTION(ModelPoolReleaseEntry, FIELDRO,
+  FollowerNative_ModelPoolReleaseEntry, "ModelPoolReleaseEntry")
+RETAIL_FUNCTION(ModelPoolBeginShutdown, FIELDRO,
+  FollowerNative_ModelPoolBeginShutdown, "ModelPoolBeginShutdown")
+RETAIL_FUNCTION(ModelPoolCheckShutdown, FIELDRO,
+  FollowerNative_ModelPoolCheckShutdown, "ModelPoolCheckShutdown")
+RETAIL_FUNCTION(ModelPoolIsShutdownComplete, FIELDRO,
+  FollowerNative_ModelPoolIsShutdownComplete, "ModelPoolIsShutdownComplete")
+RETAIL_FUNCTION(ModelPoolReleaseStorage, FIELDRO,
+  FollowerNative_ModelPoolReleaseStorage, "ModelPoolReleaseStorage")
+RETAIL_FUNCTION(ModelPoolIsLoadComplete, FIELDRO,
+  FollowerNative_ModelPoolIsLoadComplete, "ModelPoolIsLoadComplete")
+RETAIL_FUNCTION(ModelPoolCreateResources, FIELDRO,
+  FollowerNative_ModelPoolCreateResources, "ModelPoolCreateResources")
+RETAIL_FUNCTION(ModelPoolAllocateEntry, FIELDRO,
+  FollowerNative_ModelPoolAllocateEntry, "ModelPoolAllocateEntry")
+RETAIL_FUNCTION(FieldModelIsLoadComplete, FIELDRO,
+  FollowerNative_FieldModelIsLoadComplete, "FieldModelIsLoadComplete")
+RETAIL_FUNCTION(ModelPoolTickEntries, FIELDRO,
+  FollowerNative_ModelPoolTickEntries, "ModelPoolTickEntries")
+RETAIL_FUNCTION(ModelPoolUpdateEntryPresentation, FIELDRO,
+  FollowerNative_ModelPoolUpdateEntryPresentation, "ModelPoolUpdateEntryPresentation")
+RETAIL_FUNCTION(FieldModelCreateRenderResources, FIELDRO,
+  FollowerNative_FieldModelCreateRenderResources, "FieldModelCreateRenderResources")
+RETAIL_FUNCTION(FieldModelApplyStoredHeight, FIELDRO,
+  FollowerNative_FieldModelApplyStoredHeight, "FieldModelApplyStoredHeight")
+RETAIL_FUNCTION(FieldModelEnableAmbientTint, FIELDRO,
+  FollowerNative_FieldModelEnableAmbientTint, "FieldModelEnableAmbientTint")
+RETAIL_FUNCTION(ModelPoolInitializeStorage, FIELDRO,
+  FollowerNative_ModelPoolInitializeStorage, "ModelPoolInitializeStorage")
+RETAIL_FUNCTION(ModelPoolBindServices, FIELDRO,
+  FollowerNative_ModelPoolBindServices, "ModelPoolBindServices")
+RETAIL_FUNCTION(ModelPoolBeginLoad, FIELDRO,
+  FollowerNative_ModelPoolBeginLoad, "ModelPoolBeginLoad")
+RETAIL_FUNCTION(EffectsIsDataAvailable, FIELDRO,
+  FollowerNative_EffectsIsDataAvailable, "EffectsIsDataAvailable")
+RETAIL_FUNCTION(EffectsLoadData, FIELDRO,
+  FollowerNative_EffectsLoadData, "EffectsLoadData")
+RETAIL_FUNCTION(EffectsRegisterResources, FIELDRO,
+  FollowerNative_EffectsRegisterResources, "EffectsRegisterResources")
+RETAIL_FUNCTION(EffectsReleaseResources, FIELDRO,
+  FollowerNative_EffectsReleaseResources, "EffectsReleaseResources")
+RETAIL_FUNCTION(EffectsCreateAtPosition, FIELDRO,
+  FollowerNative_EffectsCreateAtPosition, "EffectsCreateAtPosition")
+RETAIL_FUNCTION(EffectsRequestStop, FIELDRO,
+  FollowerNative_EffectsRequestStop, "EffectsRequestStop")
+RETAIL_FUNCTION(EffectsCountUnfinished, FIELDRO,
+  FollowerNative_EffectsCountUnfinished, "EffectsCountUnfinished")
+RETAIL_FUNCTION(EffectsTickAndReap, FIELDRO,
+  FollowerNative_EffectsTickAndReap, "EffectsTickAndReap")
+RETAIL_FUNCTION(WeatherRequestOverride, FIELDRO,
+  FollowerNative_WeatherRequestOverride, "WeatherRequestOverride")
+RETAIL_FUNCTION(WeatherClearOverride, FIELDRO,
+  FollowerNative_WeatherClearOverride, "WeatherClearOverride")
+RETAIL_FUNCTION(EdgeMapRemoveRenderingTarget, STATIC,
+  _ZN7poke_3d8renderer22EdgeMapSceneRenderPath25RemoveEdgeRenderingTargetEPN4gfl215renderingengine10scenegraph8instance12DrawableNodeE,
+  "_ZN7poke_3d8renderer22EdgeMapSceneRenderPath25RemoveEdgeRenderingTargetEPN4gfl215renderingengine10scenegraph8instance12DrawableNodeE")
+
+RETAIL_DATA(GfglSingleton, STATIC,
+  _ZN4gfl23gfx8GFGLBaseINS0_3ctr5CTRGLEE4s_GpE,
+  "_ZN4gfl23gfx8GFGLBaseINS0_3ctr5CTRGLEE4s_GpE")

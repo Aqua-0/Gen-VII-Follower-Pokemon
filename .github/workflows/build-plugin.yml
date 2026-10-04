@@ -1,0 +1,88 @@
+name: Build plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate project
+        id: project
+        run: |
+          if [[ -f Makefile && -f Gen7FieldFollower.plgInfo ]]; then
+            echo 'path=.' >> "$GITHUB_OUTPUT"
+          elif [[ -f standalone/Makefile ]]; then
+            echo 'path=standalone' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Plugin project not found' >&2
+            exit 1
+          fi
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends curl ca-certificates zstd zip
+          mkdir -p "$RUNNER_TEMP/plugin-dependencies"
+          cd "$RUNNER_TEMP/plugin-dependencies"
+          curl --fail --location --retry 3 \
+            https://thepixellizeross.gitlab.io/packages/any/libctrpf-0.8.0.r1444-1-any.pkg.tar.zst \
+            --output libctrpf.pkg.tar.zst
+          curl --fail --location --retry 3 \
+            https://thepixellizeross.gitlab.io/packages/x86_64/linux/3gxtool-1.3-1-x86_64.pkg.tar.zst \
+            --output 3gxtool.pkg.tar.zst
+          sha256sum --check <<'CHECKSUMS'
+          af324bc6c27a5bee817bf7f3a3413b926891913254bb1d9abe09edbfb83d06b1  libctrpf.pkg.tar.zst
+          ce691228a76e159ea14c0716f8169584a49ffcaaa1005158664567ede9dccd4c  3gxtool.pkg.tar.zst
+          CHECKSUMS
+          tar --zstd -xf libctrpf.pkg.tar.zst opt/
+          tar --zstd -xf 3gxtool.pkg.tar.zst opt/
+          echo "CTRPFLIB=$PWD/opt/devkitpro/libctrpf" >> "$GITHUB_ENV"
+          echo "THREEGXTOOL=$PWD/opt/devkitpro/tools/bin/3gxtool" >> "$GITHUB_ENV"
+      - name: Build release and diagnostic plugins
+        working-directory: ${{ steps.project.outputs.path }}
+        run: |
+          bash build.sh -j2
+          bash build.sh DIAGNOSTIC=1 -j2
+      - name: Package release
+        working-directory: ${{ steps.project.outputs.path }}
+        run: bash package.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: field-follower-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            ${{ steps.project.outputs.path }}/Gen7FieldFollower.3gx
+            ${{ steps.project.outputs.path }}/Gen7FieldFollowerDiagnostic.3gx
+            ${{ steps.project.outputs.path }}/out/release/luma/
+            ${{ steps.project.outputs.path }}/out/release/archives/*.zip
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: field-follower-${{ github.sha }}
+          path: artifacts
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/Gen7FieldFollower.3gx
+            artifacts/Gen7FieldFollowerDiagnostic.3gx
+            artifacts/out/release/archives/*.zip

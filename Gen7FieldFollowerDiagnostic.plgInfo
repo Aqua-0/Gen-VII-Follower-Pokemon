@@ -1,0 +1,25 @@
+Author: Gen VII Field Follower project
+
+Version:
+    Major: 0
+    Minor: 1
+    Revision: 0
+
+Targets:
+    - 0x00164800
+    - 0x00175e00
+    - 0x001b5000
+    - 0x001b5100
+
+Title: Gen VII Field Follower Diagnostic
+
+Summary: Hardware performance profiler for the standalone follower
+
+Description: |
+  Captures follower timing and provides edge-isolation A/B modes.
+
+Compatibility: Any
+
+MemorySize: 5MiB
+
+UsePrivateMemory: false

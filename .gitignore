@@ -1,0 +1,9 @@
+build/
+build-diagnostic/
+*.3gx
+*.elf
+*.map
+__pycache__/
+*.pyc
+out/
+profile_sources.local.json
