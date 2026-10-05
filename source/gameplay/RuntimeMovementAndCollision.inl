@@ -66,6 +66,7 @@ inline void Manager::UpdateFollower(
   }
 #endif
 
+  const bool closeFollow = Gen7Follower3gx::IsCloseFollowEnabled();
   f32 configuredWalkSpeed = FOLLOWER_WALK_SPEED;
   f32 configuredRunSpeed = FOLLOWER_RUN_SPEED;
   f32 configuredWarpDistance = FOLLOWER_WARP_DISTANCE;
@@ -98,7 +99,7 @@ inline void Manager::UpdateFollower(
   m_TrailHasPreviousPlayerPosition = true;
   if( TrailMovementPolicy::IsPlayerMoving( belugaPlayerStep ) )
   {
-    if( m_TrailPlayerMovingFrames < TrailMovementPolicy::START_MOVE_FRAMES )
+    if( m_TrailPlayerMovingFrames < (closeFollow ? TrailMovementPolicy::START_MOVE_FRAMES : 7U) )
     {
       ++m_TrailPlayerMovingFrames;
     }
@@ -110,8 +111,17 @@ inline void Manager::UpdateFollower(
 #endif
   const f32 collisionRadius = GetFollowerCollisionRadius( pPokeModel );
   const f32 playerBodyRadius = GetFollowerPlayerBodyRadius( pPokeModel );
-  const f32 playerSeparation =
-    playerBodyRadius + FOLLOWER_PLAYER_COLLISION_RADIUS;
+  f32 playerSeparation = playerBodyRadius + FOLLOWER_PLAYER_COLLISION_RADIUS;
+#if FOLLOWER_POKEMON_USE_TRAIL_POLICY
+  if (closeFollow) playerSeparation += belugaPlayerStep*2.0f < 24.0f ? belugaPlayerStep*2.0f : 24.0f;
+#endif
+
+  if (m_PlacementPending)
+  {
+    TryPlaceNearPlayer(playerPosition,pTerrainGroundScene,pTerrainWallScene,
+      pStaticScene,collisionRadius,playerSeparation);
+    m_PlacementPending=false;
+  }
 
   // Check the ground even when standing still, since the terrain can move.
   gfl2::math::Vector3 groundedPosition = m_Position;
@@ -192,7 +202,7 @@ inline void Manager::UpdateFollower(
   }
   else
   {
-    m_TrailMovementState = TrailMovementPolicy::SelectState(
+    m_TrailMovementState = (closeFollow ? TrailMovementPolicy::SelectState : TrailMovementPolicy::SelectStandardState)(
       m_TrailMovementState,
       belugaThresholds,
       distance,
@@ -222,17 +232,8 @@ inline void Manager::UpdateFollower(
 #endif
       distance > configuredWarpDistance )
   {
-    f32 warpDistance = playerSeparation + 20.0f;
-    if( warpDistance < 100.0f )
-    {
-      warpDistance = 100.0f;
-    }
-    m_Position.Set(
-      playerPosition.x,
-      playerPosition.y,
-      playerPosition.z + warpDistance
-      );
-    ApplyGround( pTerrainGroundScene, &m_Position );
+    const bool placed = TryPlaceNearPlayer(playerPosition,pTerrainGroundScene,
+      pTerrainWallScene,pStaticScene,collisionRadius,playerSeparation);
     m_RunMode = true;
     m_RunTransitionFrames = 0;
     useRunMotion = true;
@@ -240,7 +241,7 @@ inline void Manager::UpdateFollower(
     m_TrailMovementState = TrailMovementPolicy::STATE_RUN;
     m_TrailHasFacingDirection = false;
 #endif
-    warpedThisFrame = true;
+    warpedThisFrame = placed;
   }
 #if FOLLOWER_POKEMON_USE_TRAIL_POLICY
   else if( !holdStationaryArrival &&
@@ -252,7 +253,7 @@ inline void Manager::UpdateFollower(
   {
 #endif
 #if FOLLOWER_POKEMON_USE_TRAIL_POLICY
-    desiredSpeed = TrailMovementPolicy::SelectDesiredSpeed(
+    desiredSpeed = (closeFollow ? TrailMovementPolicy::SelectDesiredSpeed : TrailMovementPolicy::SelectStandardDesiredSpeed)(
       m_TrailMovementState,
       belugaThresholds,
       distance,
@@ -367,6 +368,15 @@ inline void Manager::UpdateFollower(
 #endif
   }
 
+#if FOLLOWER_POKEMON_USE_TRAIL_POLICY
+  if (closeFollow && wantsMove && canAdvance && !warpedThisFrame)
+  {
+    m_FollowSpeed = TrailMovementPolicy::SmoothFollowSpeed(m_FollowSpeed,desiredSpeed);
+    desiredSpeed = m_FollowSpeed;
+  }
+  else m_FollowSpeed = 0.0f;
+#endif
+
   if( wantsMove )
   {
     if( canAdvance )
@@ -384,6 +394,14 @@ inline void Manager::UpdateFollower(
     m_CollisionPlaybackRatio = 1.0f;
   }
 
+#if FOLLOWER_POKEMON_USE_TRAIL_POLICY
+  if (closeFollow && wantsMove && canAdvance && !animationPlaybackUncapped &&
+      pPokeModel->IsAvailableAnimationDirect(PokeTool::MODEL_ANIME_RUN01) &&
+      TrailMovementPolicy::NeedsRunForStride(m_WalkNominalRootSpeed,
+        FOLLOWER_WALK_ANIMATION_STEP_MAX,desiredSpeed,
+        m_CurrentMotion == static_cast<s32>(PokeTool::MODEL_ANIME_RUN01)))
+    useRunMotion = true;
+#endif
   PokeTool::MODEL_ANIME motion = PokeTool::MODEL_ANIME_FI_WAIT_A;
   if( warpedThisFrame )
   {
@@ -510,15 +528,9 @@ inline void Manager::UpdateFollower(
     {
       UpdateAnimationNominalRootSpeed( rootMotionStep );
     }
-    if( m_NominalRootSpeed > FOLLOWER_ROOT_MOTION_EPSILON )
-    {
-      proposedStep = rootMotionStep;
-    }
-    else
-    {
-      // Use the desired speed if the animation doesn't move its root.
-      proposedStep = desiredSpeed;
-    }
+    // Tiny animation strides must not cap the follower's travel speed.
+    proposedStep = closeFollow || m_NominalRootSpeed <= FOLLOWER_ROOT_MOTION_EPSILON
+      ? desiredSpeed : rootMotionStep;
 
 #if FOLLOWER_POKEMON_USE_TRAIL_POLICY
     // Limit the step size near the target so the follower matches the player.
@@ -538,8 +550,11 @@ inline void Manager::UpdateFollower(
     if( proposedStep > FOLLOWER_ROOT_MOTION_EPSILON )
     {
       gfl2::math::Vector3 desiredPosition = m_Position;
-      desiredPosition.x += forwardX * proposedStep;
-      desiredPosition.z += forwardZ * proposedStep;
+      const f32 clearFraction=Gen7Follower3gx::ClearFollowStep(
+        m_Position.x-playerPosition.x,m_Position.z-playerPosition.z,
+        forwardX*proposedStep,forwardZ*proposedStep,playerSeparation);
+      desiredPosition.x += forwardX * proposedStep * clearFraction;
+      desiredPosition.z += forwardZ * proposedStep * clearFraction;
 
       gfl2::math::Vector3 resolvedPosition;
       if( ResolveMovement(
@@ -551,7 +566,10 @@ inline void Manager::UpdateFollower(
             &resolvedPosition
             ) )
       {
-        m_Position = resolvedPosition;
+        const f32 clearFraction=Gen7Follower3gx::ClearFollowStep(
+          m_Position.x-playerPosition.x,m_Position.z-playerPosition.z,
+          resolvedPosition.x-m_Position.x,resolvedPosition.z-m_Position.z,playerSeparation);
+        if (clearFraction>=0.9999f) m_Position = resolvedPosition;
       }
     }
   }
@@ -588,6 +606,22 @@ inline void Manager::UpdateFollower(
   {
     m_NoMoveFrames = FOLLOWER_NO_MOVE_WAIT_FRAMES;
   }
+
+  if (wantsMove && !movedThisFrame && !warpedThisFrame)
+  {
+    if (++m_BlockedFollowFrames >= 60)
+    {
+      if (TryPlaceNearPlayer(playerPosition,pTerrainGroundScene,pTerrainWallScene,
+          pStaticScene,collisionRadius,playerSeparation))
+      {
+        SeedTrail(playerPosition);
+        m_NoMoveFrames=0;
+        m_CollisionPlaybackRatio=1.0f;
+      }
+      m_BlockedFollowFrames=0;
+    }
+  }
+  else m_BlockedFollowFrames=0;
 
   pPokeModel->SetPosition( GetDisplayPosition( pPokeModel ) );
   pPokeModel->SetVisible( true );
@@ -1023,3 +1057,20 @@ inline bool Manager::ResolveMovement(
   return false;
 }
 
+
+inline bool Manager::TryPlaceNearPlayer(const gfl2::math::Vector3& player,
+  BaseCollisionScene* ground, BaseCollisionScene* walls, BaseCollisionScene* objects,
+  f32 radius, f32 separation)
+{
+  if (!ground) return false;
+  gfl2::math::Vector3 candidate;
+  const f32 distance=separation+20.0f > 100.0f ? separation+20.0f : 100.0f;
+  if (!Gen7Follower3gx::FindFollowerPlacement(player,distance,candidate,
+      [&](gfl2::math::Vector3& position) {
+        return ApplyGround(ground,&position) &&
+          position.y-player.y <= 50.0f && player.y-position.y <= 50.0f &&
+          !IsWallBlocked(walls,objects,player,position,radius);
+      })) return false;
+  m_Position=candidate;
+  return true;
+}

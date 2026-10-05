@@ -1,3 +1,4 @@
+#define FollowerCarrier_ShouldEraseEdgeMaterial FollowerCarrier_ShouldEraseEdgeMaterialRegular
 #define FOLLOWER_CARRIER_THREEGX 1
 #define FOLLOWER_CARRIER_ENABLE_LOGGING FOLLOWER_3GX_DIAGNOSTIC
 #define FOLLOWER_CARRIER_ENABLE_CUTSCENE_FAST_FORWARD 0

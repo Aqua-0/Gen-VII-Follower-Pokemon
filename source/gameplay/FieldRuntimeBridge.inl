@@ -1,5 +1,7 @@
 #if FOLLOWER_CARRIER_THREEGX
 #include "FreeCamera.hpp"
+#include "FieldLightingOverride.hpp"
+#include "NormalEdgeFilter.hpp"
 #endif
 #ifndef FOLLOWER_CARRIER_PIPELINE_EDGE_NORMAL_OFFSET
 #define FOLLOWER_CARRIER_PIPELINE_EDGE_NORMAL_OFFSET 0x0d10
@@ -101,7 +103,6 @@ namespace
 {
 enum
 {
-  FIELD_LIGHT_SET_NO = 0,
   FIELD_STENCIL_NEUTRAL_ID = 0xff,
   // Use the boundary between character and background IDs for a subtle follower outline.
   FIELD_STENCIL_SOFT_ID = 150,
@@ -160,6 +161,7 @@ public:
   );
 #endif
   void Reset();
+  void RestoreLighting();
 
 private:
   bool ConfigureStencil(
@@ -180,6 +182,10 @@ private:
 
   StencilReferenceState m_StencilReferenceStates[FOLLOWER_MATERIAL_CAPACITY];
   unsigned int m_StencilReferenceStateCount;
+  Gen7Follower3gx::FieldLightingOverride<
+    gfl2::renderingengine::scenegraph::resource::MaterialResourceNode::AttributeParam,
+    gfl2::gfx::ColorU8> m_LightingOverrides[FOLLOWER_MATERIAL_CAPACITY];
+  unsigned int m_LightingOverrideCount = 0;
   Gen7Follower3gx::FollowerOutlineMode m_OutlineMode;
 #endif
 };
@@ -269,28 +275,18 @@ void FollowerSceneIntegration::ApplyFieldLighting(
   typedef gfl2::renderingengine::scenegraph::resource::MaterialResourceNode
     MaterialResourceNode;
 
+#if FOLLOWER_CARRIER_THREEGX
   const unsigned int materialCount = followerNode->GetMaterialNum();
-  for (unsigned int materialIndex = 0;
-       materialIndex < materialCount;
-       ++materialIndex)
+  for (unsigned int index=0; index<materialCount &&
+       m_LightingOverrideCount<FOLLOWER_MATERIAL_CAPACITY; ++index)
   {
-    MaterialInstanceNode* material =
-      followerNode->GetMaterialInstanceNode(materialIndex);
-    if (!material)
-    {
-      continue;
-    }
-
-    MaterialResourceNode::AttributeParam* attributes =
-      material->GetAttributeParam();
-    attributes->m_LightSetNo = FIELD_LIGHT_SET_NO;
-
-    // The field light already adds this tint, so don't apply it twice.
-    attributes->m_ConstantColor[5].r = 0xff;
-    attributes->m_ConstantColor[5].g = 0xff;
-    attributes->m_ConstantColor[5].b = 0xff;
-    attributes->m_ConstantColor[5].a = 0xff;
+    MaterialInstanceNode* material=followerNode->GetMaterialInstanceNode(index);
+    if (!material) continue;
+    MaterialResourceNode::AttributeParam* attributes=material->GetAttributeParam();
+    if (!attributes) continue;
+    m_LightingOverrides[m_LightingOverrideCount++].Apply(attributes);
   }
+#endif
 }
 
 bool FollowerSceneIntegration::Apply(
@@ -339,8 +335,13 @@ void FollowerSceneIntegration::SetOutlineMode(
     unsigned char reference = FIELD_STENCIL_NEUTRAL_ID;
     switch (outlineMode)
     {
+    case Gen7Follower3gx::FOLLOWER_APPEARANCE_NORMAL_EDGE:
+    case Gen7Follower3gx::FOLLOWER_APPEARANCE_NATIVE_FIELD:
     case Gen7Follower3gx::FOLLOWER_OUTLINE_ID_ORIGINAL:
       reference = state.originalReference;
+      break;
+    case Gen7Follower3gx::FOLLOWER_APPEARANCE_SOFT_FIELD:
+      reference = FIELD_STENCIL_SOFT_ID;
       break;
     case Gen7Follower3gx::FOLLOWER_OUTLINE_ID_SOFT:
       reference = FIELD_STENCIL_SOFT_ID;
@@ -368,6 +369,14 @@ void FollowerSceneIntegration::SetOutlineMode(
   m_OutlineMode = outlineMode;
 }
 #endif
+
+void FollowerSceneIntegration::RestoreLighting()
+{
+#if FOLLOWER_CARRIER_THREEGX
+  while (m_LightingOverrideCount)
+    m_LightingOverrides[--m_LightingOverrideCount].Restore();
+#endif
+}
 
 void FollowerSceneIntegration::Reset()
 {
@@ -431,10 +440,20 @@ struct PerformanceMaterialState
 };
 #endif
 
+#if FOLLOWER_CARRIER_THREEGX
+bool IsAdditionalFollowerDrawable(
+  gfl2::renderingengine::scenegraph::instance::DrawableNode* node
+);
+#endif
+
 class FollowerEdgeIsolation
 {
 public:
   FollowerEdgeIsolation();
+  bool ShouldEraseMaterial(const EdgeMaterialUserData* material) const
+  {
+    return m_FilterNormalEdges && !IsFollowerMaterial(material);
+  }
 
   bool Apply(
     Field::MyRenderingPipeLine* renderingPipeline,
@@ -473,6 +492,7 @@ private:
   void RestorePostProcessStyle();
   void RestoreMaterialStates();
 #if FOLLOWER_CARRIER_THREEGX
+  bool ApplyRegisteredOccluders(Field::MyRenderingPipeLine* renderingPipeline);
   void RestoreFollowerOutline();
 #endif
 #if FOLLOWER_3GX_PERFORMANCE_FEATURES
@@ -491,6 +511,7 @@ private:
   EdgeMaterialUserData* m_pFollowerMaterials[FOLLOWER_MATERIAL_CAPACITY];
   unsigned int m_MaterialStateCount;
   unsigned int m_FollowerMaterialCount;
+  bool m_FilterNormalEdges;
   bool m_IsApplied;
   bool m_SavedNormalEdgeEnable;
   EdgePostAttributeParam* m_pStyledAttributes;
@@ -532,6 +553,7 @@ FollowerEdgeIsolation::FollowerEdgeIsolation()
 : m_pSwappedPipeline(NULL)
 , m_MaterialStateCount(0)
 , m_FollowerMaterialCount(0)
+, m_FilterNormalEdges(false)
 , m_IsApplied(false)
 , m_SavedNormalEdgeEnable(false)
 , m_pStyledAttributes(NULL)
@@ -1058,22 +1080,22 @@ bool FollowerEdgeIsolation::SuppressFollowerOutline(
     outlineSuppressPerformance,
     Gen7Follower3gx::PERFORMANCE_ZONE_OUTLINE
     );
-  if (!renderingPipeline)
+  if (!renderingPipeline || !followerNode || !BuildFollowerMaterialList(followerNode))
   {
     return false;
   }
 
-  // Reset the existing normal-edge state. Leave ride trails and encounter shadows alone.
+  const bool normalEdge = Gen7Follower3gx::GetFollowerOutlineMode() ==
+    Gen7Follower3gx::FOLLOWER_APPEARANCE_NORMAL_EDGE &&
+    Gen7Follower3gx::IsNormalEdgeFilterInstalled() &&
+    ApplyRegisteredOccluders(renderingPipeline);
   m_pSwappedPipeline = renderingPipeline;
   m_SavedNormalEdgeEnable =
     FOLLOWER_POKEMON_GET_EDGE_NORMAL_MAP_ENABLE(renderingPipeline);
-  FOLLOWER_POKEMON_SET_EDGE_NORMAL_MAP_ENABLE(renderingPipeline, false);
+  FOLLOWER_POKEMON_SET_EDGE_NORMAL_MAP_ENABLE(renderingPipeline, normalEdge);
   m_IsApplied = true;
-
-  if (!followerNode || !BuildFollowerMaterialList(followerNode))
-  {
-    return true;
-  }
+  m_FilterNormalEdges = normalEdge;
+  if (normalEdge) return true;
 
   m_FollowerOutlineStateCount = m_FollowerMaterialCount;
   for (unsigned int i = 0; i < m_FollowerOutlineStateCount; ++i)
@@ -1085,6 +1107,59 @@ bool FollowerEdgeIsolation::SuppressFollowerOutline(
       gfl2::renderingengine::scenegraph::resource::EdgeType::None;
   }
   return m_FollowerOutlineStateCount != 0;
+}
+
+bool FollowerEdgeIsolation::ApplyRegisteredOccluders(
+  Field::MyRenderingPipeLine* renderingPipeline
+)
+{
+  typedef gfl2::renderingengine::scenegraph::instance::DrawableNode DrawableNode;
+  typedef gfl2::renderingengine::renderer::MeshDrawTag MeshDrawTag;
+  typedef gfl2::renderingengine::scenegraph::resource::EdgeType EdgeType;
+
+  void* edgePath = RawField<void*>(renderingPipeline, FIELD_PIPELINE_EDGE_PATH_OFFSET);
+  if (!edgePath) return false;
+  const EdgeContainerState targets = ReadState(
+    static_cast<unsigned char*>(edgePath) + EDGE_PATH_DRAWABLE_CONTAINER_OFFSET
+    );
+  if (!targets.buffer || !targets.linkList || !targets.indexer ||
+      targets.bufferSize == 0 || targets.usedSize > targets.bufferSize)
+  {
+    return false;
+  }
+
+  EdgeLinkData** indexer = static_cast<EdgeLinkData**>(targets.indexer);
+  for (unsigned int i = 0; i < targets.usedSize; ++i)
+  {
+    EdgeLinkData* link = indexer[i];
+    DrawableNode* node = link && link->data
+      ? static_cast<DrawableNode*>(*link->data) : NULL;
+    if (!node || IsAdditionalFollowerDrawable(node)) continue;
+    const unsigned int drawTagCount = node->GetDrawTagNum();
+    for (unsigned int j = 0; j < drawTagCount; ++j)
+    {
+      MeshDrawTag* tag = static_cast<MeshDrawTag*>(node->GetDrawTag(j));
+      if (!tag || !tag->GetMaterialInstanceNode()) continue;
+      EdgeMaterialUserData* material = const_cast<EdgeMaterialUserData*>(
+        &tag->GetMaterialInstanceNode()->GetUserData()
+        );
+      if (material->m_EdgeType == EdgeType::Erase || IsFollowerMaterial(material))
+        continue;
+      if (m_MaterialStateCount == EDGE_MATERIAL_STATE_CAPACITY)
+      {
+        // Keep the follower list for the outline fallback.
+        const unsigned int followerCount = m_FollowerMaterialCount;
+        RestoreMaterialStates();
+        m_FollowerMaterialCount = followerCount;
+        return false;
+      }
+      EdgeMaterialState& saved = m_MaterialStates[m_MaterialStateCount++];
+      saved.userData = material;
+      saved.edgeType = material->m_EdgeType;
+      material->m_EdgeType = EdgeType::Erase;
+    }
+  }
+  return true;
 }
 
 void FollowerEdgeIsolation::RestoreFollowerOutline()
@@ -1384,6 +1459,7 @@ bool FollowerEdgeIsolation::Apply(
 
 void FollowerEdgeIsolation::Restore()
 {
+  m_FilterNormalEdges = false;
   FOLLOWER_PERF_SCOPE(
     outlineRestorePerformance,
     Gen7Follower3gx::PERFORMANCE_ZONE_OUTLINE
@@ -1573,6 +1649,31 @@ bool g_CutsceneFastForwardActive = false;
 GameSys::GameEventManager* g_pPendingSharedHeapEventManager = NULL;
 GameSys::GameEvent* g_pPendingSharedHeapEvent = NULL;
 void* g_pPendingSharedHeapEventVtable = NULL;
+
+#if FOLLOWER_CARRIER_THREEGX
+bool IsAdditionalFollowerDrawable(
+  gfl2::renderingengine::scenegraph::instance::DrawableNode* node
+)
+{
+  if (!g_pFollowerManager) return false;
+  for (unsigned int i = 0; i < Field::FollowerRuntime::FOLLOWER_REMOTE_REPLICA_MAX; ++i)
+  {
+    if (node == g_FollowerManager.GetRemoteReplicaModelInstanceNode(i)) return true;
+  }
+  return false;
+}
+#endif
+
+void RestoreFollowerAppearance()
+{
+  g_FollowerEdgeIsolation.Restore();
+  g_FollowerSceneIntegration.RestoreLighting();
+#if FOLLOWER_CARRIER_THREEGX
+  for (unsigned int index=0; index<Field::FollowerRuntime::FOLLOWER_REMOTE_REPLICA_MAX; ++index)
+    if (g_pRemoteFollowerSceneIntegrations[index])
+      g_pRemoteFollowerSceneIntegrations[index]->RestoreLighting();
+#endif
+}
 
 #if FOLLOWER_CARRIER_THREEGX
 void ResetRemoteFollowerSceneIntegrations()
@@ -2064,7 +2165,7 @@ SharedHeapEventGateResult UpdateSharedHeapEventGate(
       return SHARED_HEAP_EVENT_GATE_CONFLICT;
     }
 
-    g_FollowerEdgeIsolation.Restore();
+    RestoreFollowerAppearance();
     g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
     ResetRemoteFollowerSceneIntegrations();
@@ -2112,7 +2213,7 @@ SharedHeapEventGateResult UpdateSharedHeapEventGate(
   g_pPendingSharedHeapEventVtable = GetGameEventVtable(event);
   SetGameEventVtable(event, GetGameEventVtable(&g_SharedHeapBootGateEvent));
 
-  g_FollowerEdgeIsolation.Restore();
+  RestoreFollowerAppearance();
   g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
   ResetRemoteFollowerSceneIntegrations();
@@ -2565,6 +2666,24 @@ extern "C" bool FollowerCarrier_InitializeRuntime()
   return true;
 }
 
+extern "C" bool FollowerCarrier_ShouldEraseEdgeMaterial(const void* material)
+{
+  if (!g_FollowerCarrierRuntimeInitialized || !material ||
+      !g_FollowerEdgeIsolation.ShouldEraseMaterial(
+        static_cast<const EdgeMaterialUserData*>(material))) return false;
+  for (unsigned int i=0; i<Field::FollowerRuntime::FOLLOWER_REMOTE_REPLICA_MAX; ++i)
+  {
+    auto* node=g_FollowerManager.GetRemoteReplicaModelInstanceNode(i);
+    if (!node) continue;
+    for (unsigned int j=0; j<node->GetMaterialNum(); ++j)
+    {
+      auto* instance=node->GetMaterialInstanceNode(j);
+      if (instance && &instance->GetUserData()==material) return false;
+    }
+  }
+  return true;
+}
+
 extern "C" void FollowerCarrier_AfterEventCheck(Field::Fieldmap* fieldmap)
 {
 #if FOLLOWER_CARRIER_THREEGX
@@ -2608,6 +2727,23 @@ extern "C" unsigned int FollowerCarrier_Update(
   }
 #endif
 
+  if (phase == 0)
+  {
+    GameSys::GameManager* manager = fieldmap ? fieldmap->GetGameManager() : NULL;
+    GameSys::GameEventManager* events = manager
+      ? FOLLOWER_POKEMON_GET_GAME_EVENT_MANAGER(manager) : NULL;
+    Field::FieldScript::FieldScriptSystem* scripts = manager
+      ? RawField<Field::FieldScript::FieldScriptSystem*>(manager,
+          FOLLOWER_CARRIER_GAME_MANAGER_FIELD_SCRIPT_SYSTEM_OFFSET) : NULL;
+    if ((events && events->IsExists()) || IsRetailFieldScriptRunning(scripts))
+      Gen7Follower3gx::ClearFollowerTalk();
+    if (Gen7Follower3gx::UpdateFollowerTalk(fieldmap))
+    {
+      RestoreFollowerAppearance();
+      return FIELDRO_UPDATE_COMMAND_PAUSE | FIELDRO_UPDATE_COMMAND_RUN_POST;
+    }
+  }
+
   const SharedHeapEventGateResult sharedHeapGateResult =
     UpdateSharedHeapEventGate(fieldmap);
 
@@ -2628,7 +2764,7 @@ extern "C" unsigned int FollowerCarrier_Update(
 #if FOLLOWER_CARRIER_ENABLE_CUTSCENE_FAST_FORWARD
     StopCutsceneFastForward(fieldmap);
 #endif
-    g_FollowerEdgeIsolation.Restore();
+    RestoreFollowerAppearance();
     g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
     ResetRemoteFollowerSceneIntegrations();
@@ -2640,7 +2776,7 @@ extern "C" unsigned int FollowerCarrier_Update(
 
   if (phase == 0)
   {
-    g_FollowerEdgeIsolation.Restore();
+    RestoreFollowerAppearance();
 #if FOLLOWER_3GX_INTERACTION_FEATURES
     if (
 #if FOLLOWER_CARRIER_THREEGX
@@ -2666,7 +2802,7 @@ extern "C" unsigned int FollowerCarrier_Update(
 #if FOLLOWER_CARRIER_ENABLE_CUTSCENE_FAST_FORWARD
     StopCutsceneFastForward(fieldmap);
 #endif
-    g_FollowerEdgeIsolation.Restore();
+    RestoreFollowerAppearance();
     g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
     ResetRemoteFollowerSceneIntegrations();
@@ -2678,7 +2814,7 @@ extern "C" unsigned int FollowerCarrier_Update(
 #if FOLLOWER_CARRIER_ENABLE_CUTSCENE_FAST_FORWARD
   if (g_CutsceneFastForwardActive)
   {
-    g_FollowerEdgeIsolation.Restore();
+    RestoreFollowerAppearance();
     g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
     ResetRemoteFollowerSceneIntegrations();
@@ -2742,6 +2878,7 @@ extern "C" unsigned int FollowerCarrier_Update(
     {
       TraverseFollowerForPerformance(remoteFollowerNodes[index]);
     }
+    g_FollowerManager.UpdatePresentationAfterTraversal();
   }
 #endif
 
@@ -2897,6 +3034,7 @@ extern "C" unsigned int FollowerCarrier_Terminate()
   DisableCutsceneBlackout();
   g_CutsceneFastForwardActive = false;
 #endif
+  if (Gen7Follower3gx::DrainFollowerTalk()) return 0U;
   return g_FollowerManager.Terminate() ? 1U : 0U;
 }
 
@@ -2995,7 +3133,7 @@ extern "C" unsigned int FollowerCarrier_HostTerminate(
   StopCutsceneFastForward(fieldmap);
 #endif
   ResetSharedHeapEventGate();
-  g_FollowerEdgeIsolation.Restore();
+  RestoreFollowerAppearance();
   g_FollowerSceneIntegration.Reset();
 #if FOLLOWER_CARRIER_THREEGX
   ResetRemoteFollowerSceneIntegrations();

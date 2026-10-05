@@ -1,3 +1,7 @@
+#include "FollowerTalk.hpp"
+#include "FollowMode.hpp"
+#include "FollowerPlacement.hpp"
+#include "FollowerClearance.hpp"
 #pragma once
 #ifndef FOLLOWER_CARRIER_DEDICATED_ARENA
 #define FOLLOWER_CARRIER_DEDICATED_ARENA 0
@@ -629,6 +633,7 @@ public:
 #endif
     return reasons;
   }
+  void UpdatePresentationAfterTraversal();
   gfl2::renderingengine::scenegraph::instance::ModelInstanceNode* GetFollowerModelInstanceNode( void ) const;
 #if FOLLOWER_CARRIER_THREEGX
   bool GetNetworkState(
@@ -968,6 +973,8 @@ private:
     f32 weight
     );
 #endif
+  bool TryPlaceNearPlayer(const gfl2::math::Vector3& player, BaseCollisionScene* ground,
+    BaseCollisionScene* walls, BaseCollisionScene* objects, f32 radius, f32 separation);
   bool ApplyGround( BaseCollisionScene* pTerrainGroundScene, gfl2::math::Vector3* pPosition ) const;
   bool IsSceneWallBlocked( BaseCollisionScene* pScene, const gfl2::math::Vector3& from, const gfl2::math::Vector3& to, f32 radius, bool checkMesh, bool checkShapes, bool centerMeshOnly ) const;
   bool IsWallBlocked( BaseCollisionScene* pTerrainWallScene, BaseCollisionScene* pStaticScene, const gfl2::math::Vector3& from, const gfl2::math::Vector3& to, f32 radius ) const;
@@ -1032,6 +1039,9 @@ private:
   u32 m_TrailCount;
   u32 m_RunTransitionFrames;
   u32 m_NoMoveFrames;
+  u32 m_BlockedFollowFrames = 0;
+  f32 m_FollowSpeed = 0.0f;
+  bool m_PlacementPending = true;
   s32 m_CurrentMotion;
   f32 m_AnimationStepFrame;
   f32 m_NominalRootSpeed;
@@ -1078,6 +1088,8 @@ private:
   u32 m_InteractionDataId;
   u32 m_InteractionHeapFree;
   u32 m_InteractionResourceCount;
+  u32 m_TalkReaction;
+  f32 m_TalkHopOffset;
   u32 m_InteractionPlayingFrames;
   u32 m_InteractionDiagnosticResult;
   u32 m_InteractionSelectedMotion;
@@ -1895,6 +1907,19 @@ inline bool Manager::TryStartInteraction( Fieldmap* pFieldmap )
   m_InteractionFacingYaw = m_ModelFacingYaw;
   m_InteractionFacingComplete = false;
   UpdateInteractionFacing( pPokeModel, playerPosition );
+  if( !formChangeChord && !specialEffectsChord )
+  {
+    Gen7Follower3gx::ClearFollowerTalk();
+    m_InteractionRandomState = m_InteractionRandomState * 1664525U + 1013904223U;
+    m_TalkReaction = 1U + (m_InteractionRandomState >> 16) % 3U;
+    m_TalkHopOffset = 0.0f;
+    m_InteractionPlayingFrames = 0;
+    m_InteractionState = INTERACTION_STATE_PLAYING;
+    m_InteractionCryPending = true;
+    SetMotion( PokeTool::MODEL_ANIME_FI_WAIT_A );
+    return true;
+  }
+
   ResetPendingInteractionEffect();
   const u32 followerSpecies = static_cast<u32>( m_SimpleParam.monsNo );
   Gen7Follower3gx::DiagnosticEffectDefinition labEffect = {};
@@ -1984,6 +2009,41 @@ inline bool Manager::UpdateInteraction(
   BaseCollisionScene* pTerrainGroundScene
 )
 {
+  if( m_TalkReaction )
+  {
+    PokeTool::PokeModel* model = GetPokeModel();
+    if( !model ) return false;
+    const gfl2::math::Vector3 player = pFieldmap->GetPlayerPosition();
+    ApplyGround( pTerrainGroundScene, &m_Position );
+    if( UpdateInteractionFacing( model, player ) )
+    {
+      if( m_InteractionCryPending )
+      {
+        m_InteractionCryPending = false;
+        Sound::PlayVoice( 0, m_SimpleParam.monsNo, m_SimpleParam.formNo,
+          Sound::VOICE_TYPE_DEFAULT, false, 0 );
+      }
+      m_TalkHopOffset = Gen7Follower3gx::FollowerTalkHop(
+        m_TalkReaction, m_InteractionPlayingFrames );
+      if( ++m_InteractionPlayingFrames >
+          Gen7Follower3gx::FollowerTalkDuration( m_TalkReaction ) )
+      {
+        Gen7Follower3gx::ShowFollowerTalk( m_TalkReaction );
+        m_TalkReaction = 0;
+        m_TalkHopOffset = 0.0f;
+        m_InteractionState = m_InteractionPackLoaded
+          ? INTERACTION_STATE_READY : INTERACTION_STATE_NONE;
+        SeedTrail( player );
+#if FOLLOWER_POKEMON_USE_TRAIL_POLICY
+        ResetTrailMovementPolicy( player );
+#endif
+      }
+    }
+    model->SetPosition( GetDisplayPosition( model ) );
+    model->SetAnimationStepFrame( 1.0f );
+    if( m_pFactory ) m_pFactory->TickEntries();
+    return true;
+  }
   if( m_SpeciesActionKind != SPECIES_ACTION_NONE )
   {
     return UpdateSpeciesAction( pFieldmap, pTerrainGroundScene );
@@ -2211,6 +2271,9 @@ inline bool Manager::UpdateInteraction(
 
 inline bool Manager::PrepareInteractionForTerminate( bool preserveSpeciesAction )
 {
+  m_TalkReaction = 0;
+  m_TalkHopOffset = 0.0f;
+  Gen7Follower3gx::ClearFollowerTalk();
   StopMountedRide();
   if( m_MountedRideCleanup )
   {

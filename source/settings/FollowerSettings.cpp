@@ -1,3 +1,4 @@
+#include "FollowMode.hpp"
 #include "FollowerSettings.hpp"
 #include "PerformanceDiagnostics.hpp"
 
@@ -1473,7 +1474,14 @@ bool InitializeFollowerSettings()
     DEFAULT_POKE_BALL_SOUND_VOLUME_PERCENT,
     __ATOMIC_RELAXED
     );
-  const bool needsMigration = LoadSettings(g_SettingsLoadedFromDisk);
+  bool needsMigration = LoadSettings(g_SettingsLoadedFromDisk);
+  if (g_TrailDelay==3 && g_StopDistance==200 && g_StartDistance==300 &&
+      g_RunDistance==1600 && g_WalkSpeed==140 && g_RunSpeed==300 &&
+      g_CatchUpStep==15 && g_WarpDistance==9000)
+  {
+    StoreBehaviorState(GetDefaultBehavior());
+    needsMigration=true;
+  }
   g_Initialized = true;
   if (needsMigration)
   {
@@ -1628,6 +1636,12 @@ const char* GetFollowerOutlineModeName(FollowerOutlineMode mode)
 {
   switch (mode)
   {
+  case FOLLOWER_APPEARANCE_NORMAL_EDGE:
+    return "Normal edge (experimental)";
+  case FOLLOWER_APPEARANCE_NATIVE_FIELD:
+    return "Native field";
+  case FOLLOWER_APPEARANCE_SOFT_FIELD:
+    return "Field soft";
   case FOLLOWER_OUTLINE_ID_MEDIUM:
     return "ID Medium";
   case FOLLOWER_OUTLINE_ID_ORIGINAL:
@@ -1987,11 +2001,13 @@ void SetSavedPerformanceOptions(unsigned int options)
 
 unsigned int GetFollowerTrailDelayFrames()
 {
+  if (IsCloseFollowEnabled()) return 3U;
   return __atomic_load_n(&g_TrailDelay, __ATOMIC_RELAXED);
 }
 
 float GetFollowerStopDistance()
 {
+  if (IsCloseFollowEnabled()) return 20.0f;
   return FromStoredValue(
     FOLLOWER_BEHAVIOR_STOP_DISTANCE,
     __atomic_load_n(&g_StopDistance, __ATOMIC_RELAXED)
@@ -2000,6 +2016,7 @@ float GetFollowerStopDistance()
 
 float GetFollowerStartDistance()
 {
+  if (IsCloseFollowEnabled()) return 30.0f;
   return FromStoredValue(
     FOLLOWER_BEHAVIOR_START_DISTANCE,
     __atomic_load_n(&g_StartDistance, __ATOMIC_RELAXED)
@@ -2008,6 +2025,7 @@ float GetFollowerStartDistance()
 
 float GetFollowerRunDistance()
 {
+  if (IsCloseFollowEnabled()) return 160.0f;
   return FromStoredValue(
     FOLLOWER_BEHAVIOR_RUN_DISTANCE,
     __atomic_load_n(&g_RunDistance, __ATOMIC_RELAXED)

@@ -9,6 +9,8 @@ inline void Manager::ResetInteractionMembers( void )
   m_InteractionDataId = 0;
   m_InteractionHeapFree = 0;
   m_InteractionResourceCount = 0;
+  m_TalkReaction = 0;
+  m_TalkHopOffset = 0.0f;
   m_InteractionPlayingFrames = 0;
   m_InteractionDiagnosticResult =
     Gen7Follower3gx::FOLLOWER_INTERACTION_RESULT_NOT_ATTEMPTED;

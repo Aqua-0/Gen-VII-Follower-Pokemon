@@ -1,3 +1,5 @@
+#include "NormalEdgeFilter.hpp"
+#include "FollowerTalk.hpp"
 #include "FieldConvenience.hpp"
 #include "RidePresentation.hpp"
 #include "MountedRideFeedback.hpp"
@@ -529,7 +531,9 @@ bool InstallFieldHooks(const GameProfile& profile, const CroModuleView& fieldRo)
   }
 #endif
 
+  InstallNormalEdgeFilter(profile);
   BindPcEvent(profile);
+  BindFollowerTalk(profile, fieldRo.TextBase());
   if (!InstallRidePresentationHooks(profile)) {
     Follower3gx_NotifyRide("Follower unavailable: ride movement/effect hook validation failed");
     RemoveFieldHooks(); return false;
@@ -540,6 +544,8 @@ bool InstallFieldHooks(const GameProfile& profile, const CroModuleView& fieldRo)
 
 void RemoveFieldHooks()
 {
+  RemoveNormalEdgeFilter();
+  UnbindFollowerTalk();
   UnbindPcEvent();
   RemoveRidePresentationHooks();
 #if FOLLOWER_3GX_DIAGNOSTIC

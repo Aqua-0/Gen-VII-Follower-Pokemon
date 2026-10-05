@@ -12,6 +12,8 @@
 #include "PerformanceDiagnostics.hpp"
 #include "PluginRuntime.hpp"
 #include "SettingsMenu.hpp"
+#include "MenuHotkeySettings.hpp"
+#include "FollowMode.hpp"
 
 namespace CTRPluginFramework
 {
@@ -24,8 +26,10 @@ void PatchProcess(FwkSettings& settings)
   settings.TryLoadSDSounds = false;
   settings.CloseMenuWithB = true;
   settings.WaitTimeToBoot = Time::Zero;
+  Gen7Follower3gx::InitializeFollowMode();
   const bool settingsLoaded =
     Gen7Follower3gx::InitializeFollowerSettings();
+  Gen7Follower3gx::InitializeMenuHotkeySettings();
   Gen7Follower3gx::InitializeRiderAnimationSettings();
   Gen7Follower3gx::InitializeRideEventSettings();
   Gen7Follower3gx::InitializePartyFollowerSettings();

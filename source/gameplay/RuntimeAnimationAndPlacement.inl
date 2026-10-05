@@ -102,7 +102,9 @@ inline void Manager::UpdateAnimationNominalRootSpeed( f32 rootMotionStep )
 inline gfl2::math::Vector3 Manager::GetDisplayPosition( PokeTool::PokeModel* pPokeModel ) const
 {
   (void)pPokeModel;
-  return m_Position;
+  gfl2::math::Vector3 position = m_Position;
+  position.y += m_TalkHopOffset;
+  return position;
 }
 
 inline void Manager::ApplyFollowerAnimationGroundOffset( PokeTool::PokeModel* pPokeModel ) const
@@ -334,6 +336,7 @@ inline void Manager::ResetTrailMovementPolicy(
   const gfl2::math::Vector3& playerPosition
 )
 {
+  m_FollowSpeed = 0.0f;
   m_TrailMovementState = TrailMovementPolicy::STATE_WAIT;
   m_TrailPreviousPlayerPosition = playerPosition;
   m_TrailPlayerMovingFrames = 0;
@@ -524,4 +527,3 @@ inline void Manager::ApplyInterpolatedAnimationPose(
   }
 }
 #endif
-

@@ -80,6 +80,8 @@ inline Manager::Manager()
 , m_InteractionDataId( 0 )
 , m_InteractionHeapFree( 0 )
 , m_InteractionResourceCount( 0 )
+, m_TalkReaction( 0 )
+, m_TalkHopOffset( 0.0f )
 , m_InteractionPlayingFrames( 0 )
 , m_InteractionDiagnosticResult(
     Gen7Follower3gx::FOLLOWER_INTERACTION_RESULT_NOT_ATTEMPTED
@@ -403,7 +405,9 @@ inline void Manager::Update( Fieldmap* pFieldmap, MyRenderingPipeLine* pRenderin
 #if FOLLOWER_CARRIER_THREEGX
       ApplyRemoteReplicaGroundOffsets();
 #endif
+#if !(FOLLOWER_CARRIER_THREEGX && FOLLOWER_3GX_PERFORMANCE_FEATURES)
       m_pFactory->UpdateEntryPresentation();
+#endif
     }
 #if FOLLOWER_3GX_INTERACTION_FEATURES
     if( m_InteractionReturnGroundBlendActive )
@@ -557,6 +561,9 @@ inline void Manager::ResetPointers( void )
   m_TrailCount = 0;
   m_RunTransitionFrames = 0;
   m_NoMoveFrames = FOLLOWER_NO_MOVE_WAIT_FRAMES;
+  m_BlockedFollowFrames = 0;
+  m_FollowSpeed = 0.0f;
+  m_PlacementPending = true;
   m_CurrentMotion = PokeTool::MODEL_ANIME_ERROR;
   m_AnimationStepFrame = 1.0f;
   m_NominalRootSpeed = 0.0f;
@@ -861,6 +868,9 @@ inline void Manager::CreateLoadedModel( Fieldmap* pFieldmap )
 #endif
   if( !completingModelRecycle )
   {
+    m_PlacementPending = true;
+    m_BlockedFollowFrames = 0;
+    m_FollowSpeed = 0.0f;
     m_Position.Set(
       playerPosition.x,
       playerPosition.y,
@@ -1629,6 +1639,9 @@ inline void Manager::ResumeAfterFieldEvent( Fieldmap* pFieldmap )
   m_RunMode = false;
   m_RunTransitionFrames = 0;
   m_NoMoveFrames = FOLLOWER_NO_MOVE_WAIT_FRAMES;
+  m_BlockedFollowFrames = 0;
+  m_FollowSpeed = 0.0f;
+  m_PlacementPending = true;
   m_AnimationStepFrame = 1.0f;
   m_CollisionPlaybackRatio = 1.0f;
   SetMotion( PokeTool::MODEL_ANIME_FI_WAIT_A );
@@ -1701,3 +1714,9 @@ inline u32 Manager::GetDiagnosticTerminateBlocker( void ) const
   return 0;
 }
 
+
+inline void Manager::UpdatePresentationAfterTraversal()
+{
+  if (m_State==STATE_ACTIVE && m_pFactory && !m_IsFieldEventSuspended)
+    m_pFactory->UpdateEntryPresentation();
+}

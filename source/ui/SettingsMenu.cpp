@@ -1,5 +1,7 @@
 #include "FieldConvenience.hpp"
 #include "SettingsMenu.hpp"
+#include "MenuHotkeySettings.hpp"
+#include "FollowMode.hpp"
 #include "DecimalKeyboard.hpp"
 
 #include <3ds.h>
@@ -36,9 +38,12 @@ namespace Gen7Follower3gx
 namespace
 {
 
-const int OUTLINE_OPTION_COUNT = 4;
+const int OUTLINE_OPTION_COUNT = 7;
 const FollowerOutlineMode OUTLINE_OPTIONS[OUTLINE_OPTION_COUNT] =
 {
+  FOLLOWER_APPEARANCE_SOFT_FIELD,
+  FOLLOWER_APPEARANCE_NATIVE_FIELD,
+  FOLLOWER_APPEARANCE_NORMAL_EDGE,
   FOLLOWER_OUTLINE_ID_SOFT,
   FOLLOWER_OUTLINE_ID_MEDIUM,
   FOLLOWER_OUTLINE_ID_ORIGINAL,
@@ -336,8 +341,53 @@ extern u32 g_CtrpfMenuHotkeys
 
 void ApplyMenuHotkey()
 {
-  g_CtrpfMenuHotkeys =
-    CTRPluginFramework::Key::Start | CTRPluginFramework::Key::Select;
+  g_CtrpfMenuHotkeys = GetMenuHotkey();
+}
+
+std::string MenuHotkeyLabel()
+{
+  CTRPluginFramework::Hotkey hotkey(GetMenuHotkey(),"Open plugin menu");
+  return "Menu shortcut: "+hotkey.ToString();
+}
+
+void EditMenuHotkey(CTRPluginFramework::MenuEntry* entry)
+{
+  CTRPluginFramework::Keyboard keyboard("Menu shortcut", {
+    "L + D-pad Down + Select", "Choose buttons...", "Start + Select (original)"});
+  const int selected=keyboard.Open();
+  if (selected<0) return;
+  unsigned int keys=selected==0 ? AlternateMenuHotkey : DefaultMenuHotkey;
+  if (selected==1) {
+    CTRPluginFramework::Hotkey hotkey(GetMenuHotkey(),"Open plugin menu (B: review selection)");
+    hotkey.AskForKeys();
+    keys=hotkey.GetKeys();
+    CTRPluginFramework::Keyboard confirm("Menu shortcut",{
+      "Use "+hotkey.ToString(), "Cancel"});
+    if (confirm.Open()!=0) return;
+  }
+  if (!IsValidMenuHotkey(keys)) {
+    CTRPluginFramework::MessageBox("Choose at least one button and no opposite D-pad directions.")();
+    return;
+  }
+  if (!SetMenuHotkey(keys)) {
+    CTRPluginFramework::MessageBox("Could not save the shortcut. The previous shortcut is still active.")();
+    return;
+  }
+  ApplyMenuHotkey();
+  entry->Name()=MenuHotkeyLabel();
+}
+
+void SelectFollowMode(CTRPluginFramework::MenuEntry* entry)
+{
+  CTRPluginFramework::Keyboard keyboard("Following mode", {"Standard (default)","Close"});
+  keyboard.ChangeSelectedEntry(IsCloseFollowEnabled() ? 1 : 0);
+  const int choice=keyboard.Open();
+  if (choice<0) return;
+  if (!SetCloseFollowEnabled(choice==1)) {
+    CTRPluginFramework::MessageBox("Could not save the following mode.")();
+    return;
+  }
+  entry->Name()=std::string("Following mode: ")+(IsCloseFollowEnabled() ? "Close" : "Standard");
 }
 
 void RefreshLayeredFsConflictEntry()
@@ -516,7 +566,7 @@ void RefreshOutlineEntry()
   {
     return;
   }
-  g_pOutlineEntry->Name() = std::string("Follower outline: ") +
+  g_pOutlineEntry->Name() = std::string("Follower appearance: ") +
     GetFollowerOutlineModeName(GetFollowerOutlineMode());
 }
 
@@ -529,7 +579,7 @@ void SelectOutlineMode(CTRPluginFramework::MenuEntry*)
     options.push_back(GetFollowerOutlineModeName(OUTLINE_OPTIONS[i]));
   }
 
-  CTRPluginFramework::Keyboard keyboard("Follower outline", options);
+  CTRPluginFramework::Keyboard keyboard("Follower appearance - Native field preserves lighting and outlines", options);
   keyboard.ChangeSelectedEntry(FindOutlineOption(GetFollowerOutlineMode()));
   const int selection = keyboard.Open();
   if (selection >= 0 && selection < OUTLINE_OPTION_COUNT)
@@ -1420,6 +1470,12 @@ int RunSettingsMenu()
     CTRPluginFramework::Separator::Stippled
     );
   menu->Append(g_pLayeredFsConflictEntry);
+  auto* menuShortcut=new CTRPluginFramework::MenuEntry(MenuHotkeyLabel(),
+    "Choose the buttons used to open the menu. Saves on confirmation. "
+    "L + D-pad Down + Select avoids the soft-reset buttons. "
+    "ZL/ZR require a New 3DS or mapped emulator controls.");
+  menuShortcut->SetMenuFunc(EditMenuHotkey);
+  menu->Append(menuShortcut);
   RefreshLayeredFsConflictEntry();
 
   auto* followersFolder = new CTRPluginFramework::MenuFolder("Followers");
@@ -1488,6 +1544,13 @@ int RunSettingsMenu()
     "More followers use more memory; restart after increasing count.");
   partyFollowers->SetMenuFunc(EditPartyFollowers);
   followersFolder->Append(partyFollowers);
+  auto* followMode=new CTRPluginFramework::MenuEntry(
+    std::string("Following mode: ")+(IsCloseFollowEnabled() ? "Close" : "Standard"),
+    "Standard uses the original following behavior and your behavior settings. "
+    "Close uses shorter preset gaps and delay, smoother catch-up and travel independent "
+    "of animation stride. Speed settings apply to both. Saves on confirmation.");
+  followMode->SetMenuFunc(SelectFollowMode);
+  followersFolder->Append(followMode);
   auto* rideProfileEntry=new CTRPluginFramework::MenuEntry(
     "Pokemon size and ride setup",
     "L+R+A: mount/carry or dismount. Edit a species by Pokedex number or use the last mounted Pokemon. "
@@ -1522,7 +1585,12 @@ int RunSettingsMenu()
   RefreshFollowerToggleEntries();
 
   g_pOutlineEntry = new CTRPluginFramework::MenuEntry(
-    "Follower outline"
+    "Follower appearance",
+    "Native field uses shared field lighting without extra Pokemon tint, with original outline IDs. "
+    "Field soft uses a separate follower outline ID. Both field styles use scene stencil outlines to respect occlusion. "
+    "Normal edge adds scenery occlusion where supported; some objects may still show outlines through them. "
+    "ID styles use the previous outline adjustments. "
+    "Performance settings still apply; use Full for comparison. Saves immediately."
     );
   g_pOutlineEntry->SetMenuFunc(SelectOutlineMode);
   RefreshOutlineEntry();
@@ -1672,7 +1740,7 @@ int RunSettingsMenu()
   g_pFreeCameraEntry=new CTRPluginFramework::MenuEntry("Camera mode",
     "Circle Pad: move. D-pad/C-stick: look. A + Circle Pad: alternate look. "
     "L/R (or ZL/ZR): down/up. X: boost. Y: reset. B: hold view and control player. "
-    "Start+Select: plugin menu. Player controls are held while active. "
+    "Your menu shortcut opens the plugin menu. Player controls are held while active. "
     "Free overworld only; session-only setting. Camera passes through scenery.");
   g_pFreeCameraEntry->SetMenuFunc(SelectCameraMode);
   cameraFolder->Append(g_pFreeCameraEntry);
